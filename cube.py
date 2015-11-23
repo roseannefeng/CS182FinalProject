@@ -56,6 +56,7 @@ class Cube:
         """
 
         ultimate_list.append(face)
+        up, down, left, right, front, back = [deepcopy(f) for f in state]
 
         # up = self.fUp
         # down = self.fDown
@@ -66,22 +67,37 @@ class Cube:
 
         # IF FACE IS UP (UP AND DOWN DONT CHANGE)
         if face == 0:
+            """
             temp = self.fFront[0]
             self.fFront[0] = self.fRight[0]
             self.fRight[0] = self.fBack[0]
             self.fBack[0] = self.fLeft[0]
             self.fLeft[0] = temp
+            """
+            temp = front
+            front[0] = right[0]
+            right[0] = back[0]
+            back[0] = left[0]
+            left[0] = temp
+
         # IF FACE IS DOWN (UP AND DOWN DONT CHANGE)
-        if face == 1:
+        elif face == 1:
+            """
             temp = self.fFront[2]
             self.fFront[2] = self.fLeft[2]
             self.fLeft[2] = self.fBack[2]
             self.fBack[2] = self.fRight[2]
             self.fRight[2] = temp
+            """
+            temp = front[2]
+            front[2] = left[2]
+            left[2] = back[2]
+            back[2] = right[2]
+            right[2] = temp
 
         # IF FACE IS LEFT (LEFT AND RIGHT DONT CHANGE)
-        if face == 2:
-
+        elif face == 2:
+            """
             relevant_matrices = [self.fFront, self.fDown, self.fBack, self.fUp]
             for i in relevant_matrices:
                 i = transpose(i)
@@ -103,9 +119,33 @@ class Cube:
                     self.fBack = i
                 if ind == 3:
                     self.fUp = i
+            """
+            relevant_matrices = [front, down, back, up]
+            for i in relevant_matrices:
+                i = transpose(i)
+
+            temp = front[0]
+            front[0] = up[0]
+            up[0] = back[0]
+            back[0] = down[0]
+            down[0] = temp
+
+            for ind, i in enumerate(relevant_matrices):
+                i = transpose(i)
+
+                if ind == 0:
+                    front = i
+                if ind == 1:
+                    down = i
+                if ind == 2:
+                    back = i
+                if ind == 3:
+                    up = i
+
 
         # IF FACE IS RIGHT (LEFT AND RIGHT DONT CHANGE)
-        if face == 3:
+        elif face == 3:
+            """
             relevant_matrices = [self.fFront, self.fDown, self.fBack, self.fUp]
             for i in relevant_matrices:
                 i = transpose(i)
@@ -126,9 +166,31 @@ class Cube:
                     self.fBack = i
                 if ind == 3:
                     self.fUp = i
+            """
+            relevant_matrices = [front, down, back, up]
+            for i in relevant_matrices:
+                i = transpose(i)
+            temp = front[2]
+            front[2] = down[2]
+            down[2] = back[2]
+            back[2] = up[2]
+            up[2] = temp
+
+            for ind, i in enumerate(relevant_matrices):
+                i = transpose(i)
+
+                if ind == 0:
+                    front = i
+                if ind == 1:
+                    down = i
+                if ind == 2:
+                    back = i
+                if ind == 3:
+                    up = i
 
         # IF FACE IS FRONT (FRONT AND BACK DONT CHANGE)
-        if face == 4:
+        elif face == 4:
+            """
             relevant_matrices = [self.fLeft, self.fDown, self.fRight, self.fUp]
             for i in relevant_matrices:
                 i = transpose(i)
@@ -149,9 +211,31 @@ class Cube:
                     self.fRight = i
                 if ind == 3:
                     self.fUp = i
+            """
+            relevant_matrices = [left, down, right, up]
+            for i in relevant_matrices:
+                i = transpose(i)
+            temp = left[2]
+            left[2] = down[2]
+            down[2] = right[2]
+            right[2] = up[2]
+            up[2] = temp
+
+            for ind, i in enumerate(relevant_matrices):
+                i = transpose(i)
+
+                if ind == 0:
+                    left = i
+                if ind == 1:
+                    down = i
+                if ind == 2:
+                    right = i
+                if ind == 3:
+                    up = i
 
         # IF FACE IS BACK (FRONT AND BACK DONT CHANGE)
-        if face == 5:
+        elif face == 5:
+            """
             relevant_matrices = [self.fLeft, self.fDown, self.fRight, self.fUp]
             for i in relevant_matrices:
                 i = transpose(i)
@@ -172,7 +256,30 @@ class Cube:
                     self.fRight = i
                 if ind == 3:
                     self.fUp = i
+            """
+            relevant_matrices = [left, down, right, up]
+            for i in relevant_matrices:
+                i = transpose(i)
+            temp = left[0]
+            left[0] = up[0]
+            up[0] = right[0]
+            right[0] = down[0]
+            down[0] = temp
 
+            for ind, i in enumerate(relevant_matrices):
+                i = transpose(i)
+
+                if ind == 0:
+                    left = i
+                if ind == 1:
+                    down = i
+                if ind == 2:
+                    right = i
+                if ind == 3:
+                    up = i
+
+        newState = [up, down, left, right, front, back]
+        return newState
 
 
 
@@ -183,7 +290,8 @@ class Cube:
         """
 
         for i in range(deg):
-            self.rotate90(0, face)
+            state = self.rotate90(state, face)
+        return state
 
     def scramble(self, k):
         """
@@ -191,13 +299,17 @@ class Cube:
         over a uniform random distribution. Modifies cube faces.
         """
 
+        currentState = self.currentState()
         for i in range(k):
 
             face = random.randint(0, 5)
-            degree = random.randint(0, 2)
+            degree = random.randint(1, 3)
 
 
-            self.rotate(0, face ,degree)
+            currentState = self.rotate(currentState, face, degree)
+
+        print "scrambled {} times:".format(k), currentState
+        #self.update(currentState)
 
     def numConflicts(self, state, face):
         """
@@ -226,11 +338,8 @@ class Cube:
         return
 
 our_cube = Cube()
-
-print our_cube.currentState()
-our_cube.scramble(1000)
-print "helllo"
-print our_cube.currentState()
+print "initial:", our_cube.currentState()
+our_cube.scramble(10)
 
 
 # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
