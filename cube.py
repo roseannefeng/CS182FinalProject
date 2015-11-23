@@ -229,6 +229,7 @@ our_cube = Cube()
 
 print our_cube.currentState()
 our_cube.scramble(1000)
+print "helllo"
 print our_cube.currentState()
 
 
