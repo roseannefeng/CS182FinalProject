@@ -12,6 +12,8 @@ def transpose(matrix):
     trmatrix = [[row[0] for row in matrix],[row[1] for row in matrix],  [row[2] for row in matrix]]
     return trmatrix
 
+ultimate_list = []
+
 
 class Cube:
     def __init__(self):
@@ -52,6 +54,8 @@ class Cube:
         90 degrees clockwise looking directly on face.
         Returns state', does not modify state or cube.
         """
+
+        ultimate_list.append(face)
 
         # up = self.fUp
         # down = self.fDown
@@ -226,3 +230,10 @@ our_cube = Cube()
 print our_cube.currentState()
 our_cube.scramble(1000)
 print our_cube.currentState()
+
+
+# THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
+# THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
+# WILL BE USEFUL FOR CHECKING OUR SOLUTION
+
+# print ultimate_list
