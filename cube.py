@@ -74,7 +74,7 @@ class Cube:
             self.fBack[0] = self.fLeft[0]
             self.fLeft[0] = temp
             """
-            temp = front
+            temp = front[0]
             front[0] = right[0]
             right[0] = back[0]
             back[0] = left[0]
@@ -308,7 +308,8 @@ class Cube:
 
             currentState = self.rotate(currentState, face, degree)
 
-        print "scrambled {} times:".format(k), currentState
+        print "scrambled {} times:".format(k)
+        self.prettyPrint(currentState)
         #self.update(currentState)
 
     def numConflicts(self, state, face):
@@ -337,9 +338,31 @@ class Cube:
         """
         return
 
+    def prettyPrint(self, state):
+        # not actually pretty sorry
+        for item, name in zip(state, ['up   ','down ','left ','right','front','back ']):
+            for i in range(3):
+                if i == 0:
+                    print '\n     ', item[i]
+                elif i==1:
+                    print name, item[i]
+                else:
+                    print '     ', item[i]
+        print ''
+
+
 our_cube = Cube()
-print "initial:", our_cube.currentState()
-our_cube.scramble(10)
+init = our_cube.currentState()
+print "initial"
+our_cube.prettyPrint(init)
+our_cube.scramble(100)
+
+"""
+for f in range(6):
+    for d in range(1,4):
+        print "face:", f, "degree:", 90*d
+        our_cube.prettyPrint(our_cube.rotate(init, f, d))
+"""
 
 
 # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
