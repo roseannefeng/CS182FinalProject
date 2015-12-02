@@ -55,7 +55,6 @@ class Cube:
         Returns state', does not modify state or cube.
         """
 
-        ultimate_list.append(face)
         up, down, left, right, front, back = [deepcopy(f) for f in state]
 
         # up = self.fUp
@@ -291,6 +290,8 @@ class Cube:
 
         for i in range(deg):
             state = self.rotate90(state, face)
+        ultimate_list.append((face,deg))
+        self.update(state)
         return state
 
     def scramble(self, k):
@@ -309,8 +310,7 @@ class Cube:
             currentState = self.rotate(currentState, face, degree)
 
         print "scrambled {} times:".format(k)
-        self.prettyPrint(currentState)
-        #self.update(currentState)
+        #self.prettyPrint2(currentState)
 
     def numConflicts(self, state, face):
         """
@@ -336,37 +336,71 @@ class Cube:
         """
         Given state, update the faces of the model accordingly.
         """
-        return
+        self.fUp = deepcopy(state[0])
+        self.fDown = deepcopy(state[1])
+        self.fLeft = deepcopy(state[2])
+        self.fRight = deepcopy(state[3])
+        self.fFront = deepcopy(state[4])
+        self.fBac = deepcopy(state[5])
 
     def prettyPrint(self, state):
         # not actually pretty sorry
         for item, name in zip(state, ['up   ','down ','left ','right','front','back ']):
             for i in range(3):
+                text = reduce(lambda x,y: x + ' ' + y, item[i])
                 if i == 0:
-                    print '\n     ', item[i]
+                    print '\n     ', text
                 elif i==1:
-                    print name, item[i]
+                    print name, text
                 else:
-                    print '     ', item[i]
+                    print '     ', text
         print ''
 
+    def prettyPrint2(self, state):
+        # not actually pretty sorry
+        row1 = '|'
+        row2 = '|'
+        row3 = '|'
+        labels = '   up      down    left   right   front    back'
+        for item in state:
+            for i in range(3):
+                text = reduce(lambda x,y: x+' '+y, item[i])
+                if i == 0:
+                    row1 += ' ' + text + ' |'
+                elif i==1:
+                    row2 += ' ' + text + ' |'
+                else:
+                    row3 += ' ' + text + ' |'
+        print row1
+        print row2
+        print row3
+        print labels
 
 our_cube = Cube()
+print "initial:"
+our_cube.prettyPrint2(our_cube.currentState())
+
+#our_cube.scramble(10)
+#our_cube.prettyPrint2(our_cube.currentState())
+
+
 init = our_cube.currentState()
-print "initial"
-our_cube.prettyPrint(init)
-our_cube.scramble(100)
-
-"""
 for f in range(6):
-    for d in range(1,4):
+    for d in [2]:#range(1,4):
         print "face:", f, "degree:", 90*d
-        our_cube.prettyPrint(our_cube.rotate(init, f, d))
+        our_cube.prettyPrint2(our_cube.rotate(init, f, d))
+
+
 """
-
-
 # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
 # THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
 # WILL BE USEFUL FOR CHECKING OUR SOLUTION
 
-# print ultimate_list
+
+state = our_cube.currentState()
+for f, d in ultimate_list[::-1]:
+    state = our_cube.rotate(state, f, 4-d)
+
+print "unscrambled:"
+our_cube.prettyPrint2(our_cube.currentState())
+"""
