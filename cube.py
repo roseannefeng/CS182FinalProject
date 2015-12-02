@@ -120,8 +120,10 @@ class Cube:
                     self.fUp = i
             """
             relevant_matrices = [front, down, back, up]
-            for i in relevant_matrices:
-                i = transpose(i)
+            for i in range(len(relevant_matrices)):
+                matr = relevant_matrices[i]
+                relevant_matrices[i] = transpose(matr)
+            front, down, back, up = relevant_matrices
 
             temp = front[0]
             front[0] = up[0]
@@ -167,8 +169,10 @@ class Cube:
                     self.fUp = i
             """
             relevant_matrices = [front, down, back, up]
-            for i in relevant_matrices:
-                i = transpose(i)
+            for i in range(len(relevant_matrices)):
+                matr = relevant_matrices[i]
+                relevant_matrices[i] = transpose(matr)
+            front, down, back, up = relevant_matrices
             temp = front[2]
             front[2] = down[2]
             down[2] = back[2]
@@ -212,8 +216,10 @@ class Cube:
                     self.fUp = i
             """
             relevant_matrices = [left, down, right, up]
-            for i in relevant_matrices:
-                i = transpose(i)
+            for i in range(len(relevant_matrices)):
+                matr = relevant_matrices[i]
+                relevant_matrices[i] = transpose(matr)
+            left, down, right, up = relevant_matrices
             temp = left[2]
             left[2] = down[2]
             down[2] = right[2]
@@ -257,8 +263,10 @@ class Cube:
                     self.fUp = i
             """
             relevant_matrices = [left, down, right, up]
-            for i in relevant_matrices:
-                i = transpose(i)
+            for i in range(len(relevant_matrices)):
+                matr = relevant_matrices[i]
+                relevant_matrices[i] = transpose(matr)
+            left, down, right, up = relevant_matrices
             temp = left[0]
             left[0] = up[0]
             up[0] = right[0]
@@ -386,7 +394,7 @@ our_cube.prettyPrint2(our_cube.currentState())
 
 init = our_cube.currentState()
 for f in range(6):
-    for d in [2]:#range(1,4):
+    for d in range(1,4):
         print "face:", f, "degree:", 90*d
         our_cube.prettyPrint2(our_cube.rotate(init, f, d))
 
