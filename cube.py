@@ -4,7 +4,7 @@ import sys, os
 import random 
 import argparse
 import heapq
-
+from collections import defaultdict
 
 
 #helper function that transposes matrix in order to make reassignment easier
@@ -300,6 +300,10 @@ class Cube:
             state = self.rotate90(state, face)
         ultimate_list.append((face,deg))
         self.update(state)
+        cstate = self.currentState()
+        self.prettyPrint2(cstate)
+        total, faces = self.countColors(cstate)
+        print total.items() #sum([x for _, x in total.items()])
         return state
 
     def scramble(self, k):
@@ -314,10 +318,9 @@ class Cube:
             face = random.randint(0, 5)
             degree = random.randint(1, 3)
 
-
             currentState = self.rotate(currentState, face, degree)
 
-        print "scrambled {} times:".format(k)
+        #print "scrambled {} times:".format(k)
         #self.prettyPrint2(currentState)
 
     def numConflicts(self, state, face):
@@ -339,6 +342,19 @@ class Cube:
         Returns True if all faces are a solid color.
         """
         return
+
+    def countColors(self, state):
+        faces = {}
+        colors = defaultdict(int)
+        for i,f in enumerate(['up','down','left','right','front','back']):
+            currentFace = state[i]
+            d = defaultdict(int)
+            for row in currentFace:
+                for item in row:
+                    d[item] += 1
+                    colors[item] += 1
+            faces[f] = d.items()
+        return colors, faces
 
     def update(self, state):
         """
@@ -385,29 +401,33 @@ class Cube:
         print labels
 
 our_cube = Cube()
-print "initial:"
-our_cube.prettyPrint2(our_cube.currentState())
-
-#our_cube.scramble(10)
+#print "initial:"
 #our_cube.prettyPrint2(our_cube.currentState())
 
+our_cube.scramble(10)
+our_cube.prettyPrint2(our_cube.currentState())
 
+
+"""
+# test each possible rotation
 init = our_cube.currentState()
 for f in range(6):
-    for d in range(1,4):
+    for d in range(1,5):
         print "face:", f, "degree:", 90*d
         our_cube.prettyPrint2(our_cube.rotate(init, f, d))
-
+"""
 
 """
 # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
 # THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
 # WILL BE USEFUL FOR CHECKING OUR SOLUTION
+"""
 
-
+"""
 state = our_cube.currentState()
 for f, d in ultimate_list[::-1]:
-    state = our_cube.rotate(state, f, 4-d)
+    state = our_cube.rotate(our_cube.currentState(), f, 4-d)
+    our_cube.prettyPrint2(state)
 
 print "unscrambled:"
 our_cube.prettyPrint2(our_cube.currentState())
