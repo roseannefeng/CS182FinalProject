@@ -301,7 +301,7 @@ class Cube:
         ultimate_list.append((face,deg))
         self.update(state)
         cstate = self.currentState()
-#        self.prettyPrint2(cstate)
+        self.prettyPrint2(cstate)
 #        total, faces = self.countColors(cstate)
 #        print total.items() #sum([x for _, x in total.items()])
         return state
@@ -341,7 +341,17 @@ class Cube:
         """ 
         Returns True if all faces are a solid color.
         """
-        return
+        colors, faces = self.countColors(state)
+        # check if all faces are a solid color
+        solid = True
+        for face in faces.values():
+            if len(face) == 1:
+                solid = solid and (face[0][1] == 9)
+                if not(solid): #if a face is not a solid color
+                    return solid
+        return (solid
+                and [x[0][1] for x in faces.values()] == [9,9,9,9,9,9]
+                and len(set(colors.keys())) == 6)
 
     def countColors(self, state):
         faces = {}
@@ -399,13 +409,12 @@ class Cube:
         print row2
         print row3
         print labels
+        print 'goal state:', self.goal(state)
 
 our_cube = Cube()
-#print "initial:"
-#our_cube.prettyPrint2(our_cube.currentState())
 
-#our_cube.scramble(10)
-#our_cube.prettyPrint2(our_cube.currentState())
+our_cube.scramble(10)
+our_cube.prettyPrint2(our_cube.currentState())
 
 
 """
@@ -423,12 +432,10 @@ for f in range(0,4):
 # WILL BE USEFUL FOR CHECKING OUR SOLUTION
 """
 
-"""
 state = our_cube.currentState()
 for f, d in ultimate_list[::-1]:
     state = our_cube.rotate(our_cube.currentState(), f, 4-d)
-    our_cube.prettyPrint2(state)
+#    our_cube.prettyPrint2(state)
 
-print "unscrambled:"
-our_cube.prettyPrint2(our_cube.currentState())
-"""
+#print "unscrambled:"
+#our_cube.prettyPrint2(our_cube.currentState())
