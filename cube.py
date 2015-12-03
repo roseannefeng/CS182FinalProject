@@ -413,10 +413,6 @@ class Cube:
 
 our_cube = Cube()
 
-our_cube.scramble(10)
-our_cube.prettyPrint2(our_cube.currentState())
-
-
 """
 # test each possible rotation
 init = our_cube.currentState()
@@ -432,10 +428,8 @@ for f in range(0,4):
 # WILL BE USEFUL FOR CHECKING OUR SOLUTION
 """
 
+our_cube.scramble(10)
 state = our_cube.currentState()
 for f, d in ultimate_list[::-1]:
+    print "undoing rotation face {} by {} degrees".format(f, d*90)
     state = our_cube.rotate(our_cube.currentState(), f, 4-d)
-#    our_cube.prettyPrint2(state)
-
-#print "unscrambled:"
-#our_cube.prettyPrint2(our_cube.currentState())
