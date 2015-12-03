@@ -14,6 +14,53 @@ def transpose(matrix):
 
 ultimate_list = []
 
+def listToTuple(matrix):
+    return tuple([tuple([tuple(i) for i in x]) for x in matrix])
+
+# eyyyy hw1
+class Queue:
+    "A container with a first-in-first-out (FIFO) queuing policy."
+    def __init__(self):
+        self.list = []
+
+    def push(self,item):
+        "Enqueue the 'item' into the queue"
+        self.list.insert(0,item)
+
+    def pop(self):
+        """
+          Dequeue the earliest enqueued item still in the queue. This
+          operation removes the item from the queue.
+        """
+        return self.list.pop()
+
+    def isEmpty(self):
+        "Returns true if the queue is empty"
+        return len(self.list) == 0
+
+def breadthFirstSearch(problem):
+    """Search the shallowest nodes in the search tree first."""
+    frontier = Queue()
+    frontier.push((problem.currentState(), []))
+    explored = set()
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        problem.update(s)
+        if problem.isGoal(s):
+            return p
+#        explored.add(s)
+        for a in problem.getSuccessors(s):
+            s_ = a[0]
+            p_ = p + [a[1]]
+            if problem.isGoal(s_):
+                return p_
+            tuples_ = listToTuple(s_)
+            if tuples_ not in explored:
+                frontier.push((s_, p_))
+                explored.add(tuples_)
+
+    return []
+
 
 class Cube:
     def __init__(self):
@@ -299,12 +346,21 @@ class Cube:
         for i in range(deg):
             state = self.rotate90(state, face)
         ultimate_list.append((face,deg))
-        self.update(state)
-        cstate = self.currentState()
-        self.prettyPrint2(cstate)
+#        self.update(state)
+#        cstate = self.currentState()
+#        self.prettyPrint2(cstate)
 #        total, faces = self.countColors(cstate)
 #        print total.items() #sum([x for _, x in total.items()])
         return state
+
+    def getSuccessors(self, state):
+        successors = [] #tuple, returns (state after rotation, rotation)
+        currentState = self.currentState()
+        for f in range(0,6):
+            for d in range(1,4):
+                successors.append((self.rotate(currentState, f, d), (f,d)))
+        return successors
+
 
     def scramble(self, k):
         """
@@ -317,8 +373,8 @@ class Cube:
 
             face = random.randint(0, 5)
             degree = random.randint(1, 3)
-            print "rotating face {} by {} degrees".format(face, degree*90)
-            self.rotate(self.currentState(), face, degree)
+            #print "rotating face {} by {} degrees".format(face, degree*90)
+            self.update(self.rotate(self.currentState(), face, degree))
 
         #print "scrambled {} times:".format(k)
         #self.prettyPrint2(currentState)
@@ -337,7 +393,7 @@ class Cube:
         """
         return
 
-    def goal(self, state):
+    def isGoal(self, state):
         """ 
         Returns True if all faces are a solid color.
         """
@@ -377,6 +433,11 @@ class Cube:
         self.fFront = deepcopy(state[4])
         self.fBack = deepcopy(state[5])
 
+    def useDirections(self, directions):
+        for f, d in directions:
+            state = self.rotate(self.currentState(), f, d)
+            self.update(state)
+
     def prettyPrint(self, state):
         # not actually pretty sorry
         for item, name in zip(state, ['up   ','down ','left ','right','front','back ']):
@@ -409,7 +470,7 @@ class Cube:
         print row2
         print row3
         print labels
-        print 'goal state:', self.goal(state)
+        print 'goal state:', self.isGoal(state)
 
 our_cube = Cube()
 
@@ -428,8 +489,14 @@ for f in range(0,4):
 # WILL BE USEFUL FOR CHECKING OUR SOLUTION
 """
 
-our_cube.scramble(10)
+our_cube.scramble(4)
+scrambled = our_cube.currentState()
+soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
+bfs = breadthFirstSearch(our_cube)
+
+"""
 state = our_cube.currentState()
 for f, d in ultimate_list[::-1]:
     print "undoing rotation face {} by {} degrees".format(f, d*90)
     state = our_cube.rotate(our_cube.currentState(), f, 4-d)
+"""
