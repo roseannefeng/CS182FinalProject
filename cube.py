@@ -301,9 +301,9 @@ class Cube:
         ultimate_list.append((face,deg))
         self.update(state)
         cstate = self.currentState()
-        self.prettyPrint2(cstate)
-        total, faces = self.countColors(cstate)
-        print total.items() #sum([x for _, x in total.items()])
+#        self.prettyPrint2(cstate)
+#        total, faces = self.countColors(cstate)
+#        print total.items() #sum([x for _, x in total.items()])
         return state
 
     def scramble(self, k):
@@ -312,13 +312,13 @@ class Cube:
         over a uniform random distribution. Modifies cube faces.
         """
 
-        currentState = self.currentState()
+#        currentState = self.currentState()
         for i in range(k):
 
             face = random.randint(0, 5)
             degree = random.randint(1, 3)
-
-            currentState = self.rotate(currentState, face, degree)
+            print "rotating face {} by {} degrees".format(face, degree*90)
+            self.rotate(self.currentState(), face, degree)
 
         #print "scrambled {} times:".format(k)
         #self.prettyPrint2(currentState)
@@ -365,7 +365,7 @@ class Cube:
         self.fLeft = deepcopy(state[2])
         self.fRight = deepcopy(state[3])
         self.fFront = deepcopy(state[4])
-        self.fBac = deepcopy(state[5])
+        self.fBack = deepcopy(state[5])
 
     def prettyPrint(self, state):
         # not actually pretty sorry
@@ -404,14 +404,14 @@ our_cube = Cube()
 #print "initial:"
 #our_cube.prettyPrint2(our_cube.currentState())
 
-our_cube.scramble(10)
-our_cube.prettyPrint2(our_cube.currentState())
+#our_cube.scramble(10)
+#our_cube.prettyPrint2(our_cube.currentState())
 
 
 """
 # test each possible rotation
 init = our_cube.currentState()
-for f in range(6):
+for f in range(0,4):
     for d in range(1,5):
         print "face:", f, "degree:", 90*d
         our_cube.prettyPrint2(our_cube.rotate(init, f, d))
