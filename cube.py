@@ -5,11 +5,13 @@ import random
 import argparse
 import heapq
 from collections import defaultdict
+import time
 
 
 #helper function that transposes matrix in order to make reassignment easier
 def transpose(matrix):
-    trmatrix = [[row[0] for row in matrix],[row[1] for row in matrix],  [row[2] for row in matrix]]
+#    trmatrix = [[row[0] for row in matrix],[row[1] for row in matrix],  [row[2] for row in matrix]]
+    trmatrix = [list(x) for x in zip(*matrix)]
     return trmatrix
 
 ultimate_list = []
@@ -61,28 +63,20 @@ def breadthFirstSearch(problem):
 
     return []
 
+def genFace(label, n):
+    return [[label for i in range(n)] for i in range(n)] 
 
 class Cube:
-    def __init__(self):
+    def __init__(self, n):
 
-        self.fUp = [['Y', 'Y', 'Y'],
-                    ['Y', 'Y', 'Y'],
-                    ['Y', 'Y', 'Y']]
-        self.fDown = [['W', 'W', 'W'],
-                        ['W', 'W', 'W'],
-                        ['W', 'W', 'W']]
-        self.fLeft = [['R', 'R', 'R'],
-                        ['R', 'R', 'R'],
-                        ['R', 'R', 'R']]
-        self.fRight = [['O', 'O', 'O'],
-                        ['O', 'O', 'O'],
-                        ['O','O','O']]
-        self.fFront = [['G','G','G'],
-                        ['G', 'G', 'G'],
-                        ['G', 'G', 'G']]
-        self.fBack = [['B', 'B', 'B'],
-                        ['B', 'B', 'B'],
-                        ['B', 'B', 'B']]
+        self.n = n
+
+        self.fUp = genFace('Y', n)
+        self.fDown = genFace('W', n)
+        self.fLeft = genFace('R', n)
+        self.fRight = genFace('O', n)
+        self.fFront = genFace('G', n)
+        self.fBack = genFace('B', n)
         # note: in functions that call face, functions will access the copy on state,
         # not the faces stored in the model itself
 
@@ -135,11 +129,11 @@ class Cube:
             self.fBack[2] = self.fRight[2]
             self.fRight[2] = temp
             """
-            temp = front[2]
-            front[2] = left[2]
-            left[2] = back[2]
-            back[2] = right[2]
-            right[2] = temp
+            temp = front[-1]
+            front[-1] = left[-1]
+            left[-1] = back[-1]
+            back[-1] = right[-1]
+            right[-1] = temp
 
         # IF FACE IS LEFT (LEFT AND RIGHT DONT CHANGE)
         elif face == 2:
@@ -220,11 +214,11 @@ class Cube:
                 matr = relevant_matrices[i]
                 relevant_matrices[i] = transpose(matr)
             front, down, back, up = relevant_matrices
-            temp = front[2]
-            front[2] = down[2]
-            down[2] = back[2]
-            back[2] = up[2]
-            up[2] = temp
+            temp = front[-1]
+            front[-1] = down[-1]
+            down[-1] = back[-1]
+            back[-1] = up[-1]
+            up[-1] = temp
 
             for ind, i in enumerate(relevant_matrices):
                 i = transpose(i)
@@ -267,11 +261,11 @@ class Cube:
                 matr = relevant_matrices[i]
                 relevant_matrices[i] = transpose(matr)
             left, down, right, up = relevant_matrices
-            temp = left[2]
-            left[2] = down[2]
-            down[2] = right[2]
-            right[2] = up[2]
-            up[2] = temp
+            temp = left[-1]
+            left[-1] = down[-1]
+            down[-1] = right[-1]
+            right[-1] = up[-1]
+            up[-1] = temp
 
             for ind, i in enumerate(relevant_matrices):
                 i = transpose(i)
@@ -348,7 +342,7 @@ class Cube:
         ultimate_list.append((face,deg))
 #        self.update(state)
 #        cstate = self.currentState()
-#        self.prettyPrint2(cstate)
+#        self.prettyPrint(cstate)
 #        total, faces = self.countColors(cstate)
 #        print total.items() #sum([x for _, x in total.items()])
         return state
@@ -377,7 +371,7 @@ class Cube:
             self.update(self.rotate(self.currentState(), face, degree))
 
         #print "scrambled {} times:".format(k)
-        #self.prettyPrint2(currentState)
+        #self.prettyPrint(currentState)
 
     def numConflicts(self, state, face):
         """
@@ -400,13 +394,14 @@ class Cube:
         colors, faces = self.countColors(state)
         # check if all faces are a solid color
         solid = True
+        numEachColor = self.n ** 2
         for face in faces.values():
             if len(face) == 1:
-                solid = solid and (face[0][1] == 9)
+                solid = solid and (face[0][1] == numEachColor)
                 if not(solid): #if a face is not a solid color
                     return solid
         return (solid
-                and [x[0][1] for x in faces.values()] == [9,9,9,9,9,9]
+                and [x[0][1] for x in faces.values()] == [numEachColor] * 6
                 and len(set(colors.keys())) == 6)
 
     def countColors(self, state):
@@ -440,39 +435,23 @@ class Cube:
 
     def prettyPrint(self, state):
         # not actually pretty sorry
-        for item, name in zip(state, ['up   ','down ','left ','right','front','back ']):
-            for i in range(3):
-                text = reduce(lambda x,y: x + ' ' + y, item[i])
-                if i == 0:
-                    print '\n     ', text
-                elif i==1:
-                    print name, text
-                else:
-                    print '     ', text
-        print ''
-
-    def prettyPrint2(self, state):
-        # not actually pretty sorry
-        row1 = '|'
-        row2 = '|'
-        row3 = '|'
-        labels = '   up      down    left   right   front    back'
+        rows = []
+        for i in range(self.n):
+            rows.append('|')
+#        labels = '   up      down    left   right   front    back'
+        labels = [' up  ',' down',' left','right','front',' back']
+        spacing = ' ' + (' ' * 2*(self.n-2))
+        labelstr = (' ' * (self.n-1)) + spacing.join(labels)
         for item in state:
-            for i in range(3):
+            for i in range(self.n):
                 text = reduce(lambda x,y: x+' '+y, item[i])
-                if i == 0:
-                    row1 += ' ' + text + ' |'
-                elif i==1:
-                    row2 += ' ' + text + ' |'
-                else:
-                    row3 += ' ' + text + ' |'
-        print row1
-        print row2
-        print row3
-        print labels
+                rows[i] += ' ' + text + ' |'
+        for row in rows:
+            print row
+        print labelstr
         print 'goal state:', self.isGoal(state)
 
-our_cube = Cube()
+our_cube = Cube(4)
 
 """
 # test each possible rotation
@@ -480,7 +459,7 @@ init = our_cube.currentState()
 for f in range(0,4):
     for d in range(1,5):
         print "face:", f, "degree:", 90*d
-        our_cube.prettyPrint2(our_cube.rotate(init, f, d))
+        our_cube.prettyPrint(our_cube.rotate(init, f, d))
 """
 
 """
@@ -491,8 +470,14 @@ for f in range(0,4):
 
 our_cube.scramble(4)
 scrambled = our_cube.currentState()
+our_cube.prettyPrint(scrambled)
 soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
-bfs = breadthFirstSearch(our_cube)
+start = time.time()
+bfs = breadthFirstSearch(deepcopy(our_cube))
+end = time.time()
+print "reverse steps:       ", soln
+print "breadth-first search:", bfs
+print "{} seconds to run breadth-first search".format(end - start)
 
 """
 state = our_cube.currentState()
