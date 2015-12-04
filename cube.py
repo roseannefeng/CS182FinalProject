@@ -130,8 +130,15 @@ class Cube:
         # IF FACE IS FRONT (FRONT AND BACK DONT CHANGE)
         if face == 4:
             relevant_matrices = [self.fLeft, self.fDown, self.fRight, self.fUp]
-            for i in relevant_matrices:
-                i = transpose(i)
+            for ind, i in enumerate(relevant_matrices):
+                if ind == 0:
+                    print "what up"
+                    print self.fLeft
+                    self.fLeft = transpose(i)
+                    print self.fLeft
+                else:
+
+                    i = transpose(i)
             temp = self.fLeft[2]
             self.fLeft[2] = self.fDown[2]
             self.fDown[2] = self.fRight[2]
