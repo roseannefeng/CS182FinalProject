@@ -7,6 +7,7 @@ import heapq
 from collections import defaultdict
 import time
 
+ultimate_list = []
 
 #helper function that transposes matrix in order to make reassignment easier
 def transpose(matrix):
@@ -14,7 +15,8 @@ def transpose(matrix):
     trmatrix = [list(x) for x in zip(*matrix)]
     return trmatrix
 
-ultimate_list = []
+def genFace(label, n):
+    return [[label for i in range(n)] for i in range(n)] 
 
 def listToTuple(matrix):
     return tuple([tuple([tuple(i) for i in x]) for x in matrix])
@@ -63,8 +65,34 @@ def breadthFirstSearch(problem):
 
     return []
 
-def genFace(label, n):
-    return [[label for i in range(n)] for i in range(n)] 
+def manhattanHeuristic(position):
+    "The Manhattan distance heuristic for a Rubik's cube."
+    corners = 0
+    edges = 0
+    # sounds annoying
+    return
+
+
+def aStarSearch(problem, heuristic=None):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    start = problem.getStartState()
+    explored = set()
+    frontier = util.PriorityQueue()
+    frontier.push((start, []), heuristic(start, problem))
+
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        explored.add(s)
+        for neighbor in problem.getSuccessors(s):
+            p_ = p + [actions[neighbor[1]]]
+            s_ = neighbor[0]
+            if problem.isGoalState(s_):
+                return p_
+            if (s_ not in explored):
+                frontier.push((s_, p_), problem.getCostOfActions(p) + heuristic(s_, problem))
+                explored.add(s_)
+
+    return []
 
 class Cube:
     def __init__(self, n):
@@ -346,7 +374,6 @@ class Cube:
 
         for i in range(deg):
             state = self.rotate90(state, face)
-        ultimate_list.append((face,deg))
 #        self.update(state)
 #        cstate = self.currentState()
 #        self.prettyPrint(cstate)
@@ -376,6 +403,7 @@ class Cube:
             degree = random.randint(1, 3)
             #print "rotating face {} by {} degrees".format(face, degree*90)
             self.update(self.rotate(self.currentState(), face, degree))
+            ultimate_list.append((face, degree))
 
         #print "scrambled {} times:".format(k)
         #self.prettyPrint(currentState)
@@ -458,24 +486,9 @@ class Cube:
         print labelstr
         print 'goal state:', self.isGoal(state)
 
-our_cube = Cube(4)
 
-"""
-# test each possible rotation
-init = our_cube.currentState()
-for f in range(0,4):
-    for d in range(1,5):
-        print "face:", f, "degree:", 90*d
-        our_cube.prettyPrint(our_cube.rotate(init, f, d))
-"""
-
-"""
-# THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
-# THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
-# WILL BE USEFUL FOR CHECKING OUR SOLUTION
-"""
-
-our_cube.scramble(4)
+our_cube = Cube(3)
+our_cube.scramble(6)
 scrambled = our_cube.currentState()
 our_cube.prettyPrint(scrambled)
 soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
@@ -487,6 +500,23 @@ print "breadth-first search:", bfs
 print "{} seconds to run breadth-first search".format(end - start)
 
 """
+# test each possible rotation
+init = our_cube.currentState()
+for f in range(0,6):
+    for d in range(1,5):
+        print "face:", f, "degree:", 90*d
+        our_cube.prettyPrint(our_cube.rotate(init, f, d))
+"""
+
+"""
+# THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
+# THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
+# WILL BE USEFUL FOR CHECKING OUR SOLUTION
+print ultimate_list
+"""
+
+"""
+# uses ultimate_list to reverse the scramble
 state = our_cube.currentState()
 for f, d in ultimate_list[::-1]:
     print "undoing rotation face {} by {} degrees".format(f, d*90)
