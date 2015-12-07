@@ -42,6 +42,38 @@ class Queue:
         "Returns true if the queue is empty"
         return len(self.list) == 0
 
+class PriorityQueue:
+    """
+      Implements a priority queue data structure. Each inserted item
+      has a priority associated with it and the client is usually interested
+      in quick retrieval of the lowest-priority item in the queue. This
+      data structure allows O(1) access to the lowest-priority item.
+
+      Note that this PriorityQueue does not allow you to change the priority
+      of an item.  However, you may insert the same item multiple times with
+      different priorities.
+    """
+    def  __init__(self):
+        self.heap = []
+        self.count = 0
+
+    def push(self, item, priority):
+        # FIXME: restored old behaviour to check against old results better
+        # FIXED: restored to stable behaviour
+        entry = (priority, self.count, item)
+        # entry = (priority, item)
+        heapq.heappush(self.heap, entry)
+        self.count += 1
+
+    def pop(self):
+        (_, _, item) = heapq.heappop(self.heap)
+        #  (_, item) = heapq.heappop(self.heap)
+        return item
+
+    def isEmpty(self):
+        return len(self.heap) == 0
+
+
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = Queue()
@@ -53,9 +85,9 @@ def breadthFirstSearch(problem):
         if problem.isGoal(s):
             return p
 #        explored.add(s)
-        for a in problem.getSuccessors(s):
-            s_ = a[0]
-            p_ = p + [a[1]]
+        for neighbor in problem.getSuccessors(s):
+            s_ = neighbor[0]
+            p_ = p + [neighbor[1]]
             if problem.isGoal(s_):
                 return p_
             tuples_ = listToTuple(s_)
@@ -65,34 +97,153 @@ def breadthFirstSearch(problem):
 
     return []
 
-def manhattanHeuristic(position):
-    "The Manhattan distance heuristic for a Rubik's cube."
-    corners = 0
-    edges = 0
-    # sounds annoying
-    return
+def nullHeuristic(position, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
 
-
-def aStarSearch(problem, heuristic=None):
+def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    start = problem.getStartState()
+    start = problem.currentState()
     explored = set()
-    frontier = util.PriorityQueue()
+    frontier = PriorityQueue()
     frontier.push((start, []), heuristic(start, problem))
 
     while not(frontier.isEmpty()):
         s, p = frontier.pop()
-        explored.add(s)
+        problem.update(s)
+        explored.add(listToTuple(s))
         for neighbor in problem.getSuccessors(s):
-            p_ = p + [actions[neighbor[1]]]
             s_ = neighbor[0]
-            if problem.isGoalState(s_):
+            p_ = p + [neighbor[1]]
+            if problem.isGoal(s_):
                 return p_
-            if (s_ not in explored):
-                frontier.push((s_, p_), problem.getCostOfActions(p) + heuristic(s_, problem))
-                explored.add(s_)
+            tuples_ = listToTuple(s_)
+            if (tuples_ not in explored):
+                frontier.push((s_, p_), len(p) + heuristic(s_, problem))
+                explored.add(tuples_)
 
     return []
+
+def bfsCorners(problem):
+    """Search the shallowest nodes in the search tree first."""
+    frontier = Queue()
+    frontier.push((problem.currentState(), []))
+    explored = set()
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        problem.update(s)
+        if problem.cornersSolved(s):
+            return p
+#        explored.add(s)
+        for neighbor in problem.getSuccessors(s):
+            s_ = neighbor[0]
+            p_ = p + [neighbor[1]]
+            if problem.cornersSolved(s_):
+                return p_
+            tuples_ = listToTuple(s_)
+            if tuples_ not in explored:
+                frontier.push((s_, p_))
+                explored.add(tuples_)
+
+    return []
+
+def bfsEdges1(problem):
+    """Search the shallowest nodes in the search tree first."""
+    frontier = Queue()
+    frontier.push((problem.currentState(), []))
+    explored = set()
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        problem.update(s)
+        if problem.edges1Solved(s):
+            return p
+#        explored.add(s)
+        for neighbor in problem.getSuccessors(s):
+            s_ = neighbor[0]
+            p_ = p + [neighbor[1]]
+            if problem.edges1Solved(s_):
+                return p_
+            tuples_ = listToTuple(s_)
+            if tuples_ not in explored:
+                frontier.push((s_, p_))
+                explored.add(tuples_)
+
+    return []
+
+def bfsEdges2(problem):
+    """Search the shallowest nodes in the search tree first."""
+    frontier = Queue()
+    frontier.push((problem.currentState(), []))
+    explored = set()
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        problem.update(s)
+        if problem.edges2Solved(s):
+            return p
+#        explored.add(s)
+        for neighbor in problem.getSuccessors(s):
+            s_ = neighbor[0]
+            p_ = p + [neighbor[1]]
+            if problem.edges2Solved(s_):
+                return p_
+            tuples_ = listToTuple(s_)
+            if tuples_ not in explored:
+                frontier.push((s_, p_))
+                explored.add(tuples_)
+
+    return []
+
+def bfsHeuristic(problem):
+    """Search the shallowest nodes in the search tree first."""
+    frontier = Queue()
+    frontier.push((problem.currentState(), []))
+    explored = set()
+    corners = False
+    edges1 = False
+    edges2 = False
+
+    while not(frontier.isEmpty()):
+        s, p = frontier.pop()
+        problem.update(s)
+        corners = corners or problem.cornersSolved(s)
+        edges1 = edges1 or problem.edges1Solved(s)
+        edges2 = edges2 or problem.edges2Solved(s)
+        if corners and edges1 and edges2:
+            return p
+#        explored.add(s)
+        for neighbor in problem.getSuccessors(s):
+            s_ = neighbor[0]
+            p_ = p + [neighbor[1]]
+            corners = corners or problem.cornersSolved(s_)
+            edges1 = edges1 or problem.edges1Solved(s_)
+            edges2 = edges2 or problem.edges2Solved(s_)
+            if corners and edges1 and edges2:
+                return p_
+            tuples_ = listToTuple(s_)
+            if tuples_ not in explored:
+                frontier.push((s_, p_))
+                explored.add(tuples_)
+
+    return []
+
+
+
+def manhattanHeuristic(position, problem):
+    """The Manhattan distance heuristic for a Rubik's cube."""
+    # sounds annoying
+    corners = len(bfsCorners(problem))
+    problem.update(position)
+    edges1 = len(bfsEdges1(problem))
+    problem.update(position)
+    edges2 = len(bfsEdges2(problem))
+    problem.update(position)
+    return max(corners, edges1, edges2)
+
+    #return len(bfsHeuristic(deepcopy(problem)))
+
 
 class Cube:
     def __init__(self, n):
@@ -398,7 +549,6 @@ class Cube:
 
 #        currentState = self.currentState()
         for i in range(k):
-
             face = random.randint(0, 5)
             degree = random.randint(1, 3)
             #print "rotating face {} by {} degrees".format(face, degree*90)
@@ -438,6 +588,86 @@ class Cube:
         return (solid
                 and [x[0][1] for x in faces.values()] == [numEachColor] * 6
                 and len(set(colors.keys())) == 6)
+
+    def cornersSolved(self, state):
+        """
+        Returns True if all corners are in the correct state.
+        """
+        match = True
+        for face in state:
+            center = face[self.n / 2][self.n / 2]
+            c1 = center == face[0][0]
+            c2 = center == face[0][-1]
+            c3 = center == face[-1][0]
+            c4 = center == face[-1][-1]
+            match = match and (c1 and c2 and c3 and c4)
+        return match
+
+    def edges1Solved(self, state):
+        """
+        Returns True if all corners are in the correct state.
+        """
+        match = True
+        mid = self.n / 2
+        up, down, left, right, front, back = state
+        fcenter = front[mid][mid]
+        ucenter = up[mid][mid]
+        lcenter = left[mid][mid]
+        rcenter = right[mid][mid]
+        dcenter = down[mid][mid]
+        fc1 = fcenter == front[0][mid]
+        fc2 = fcenter == front[mid][0]
+        fc3 = fcenter == front[mid][-1]
+        fc4 = fcenter == front[-1][mid]
+        u1 = ucenter == up[mid][0]
+        u2 = ucenter == up[mid][-1]
+        u3 = ucenter == up[-1][mid]
+        l1 = lcenter == left[0][mid]
+        l2 = lcenter == left[mid][-1]
+        r1 = rcenter == right[0][mid]
+        r2 = rcenter == right[mid][0]
+        d1 = dcenter == down[0][mid]
+
+        match = ((fc1 and fc2 and fc3 and fc4) and
+                (u1 and u2 and u3) and 
+                (l1 and l2) and 
+                (r1 and r2) and 
+                d1)
+
+        return match
+
+    def edges2Solved(self, state):
+        """
+        Returns True if all corners are in the correct state.
+        """
+        match = True
+        mid = self.n / 2
+        up, down, left, right, front, back = state
+        bcenter = back[mid][mid]
+        ucenter = up[mid][mid]
+        lcenter = left[mid][mid]
+        rcenter = right[mid][mid]
+        dcenter = down[mid][mid]
+        bc1 = bcenter == back[0][mid]
+        bc2 = bcenter == back[mid][0]
+        bc3 = bcenter == back[mid][-1]
+        bc4 = bcenter == back[-1][mid]
+        u1 = ucenter == up[0][mid]
+        l1 = lcenter == left[mid][0]
+        l2 = lcenter == left[-1][mid]
+        r1 = rcenter == right[-1][mid]
+        r2 = rcenter == right[mid][-1]
+        d1 = dcenter == down[mid][0]
+        d2 = dcenter == down[mid][-1]
+        d3 = dcenter == down[-1][mid]
+
+        match = ((bc1 and bc2 and bc3 and bc4) and
+                (u1) and 
+                (l1 and l2) and 
+                (r1 and r2) and 
+                (d1 and d2 and d3))
+
+        return match
 
     def countColors(self, state):
         faces = {}
@@ -488,16 +718,21 @@ class Cube:
 
 
 our_cube = Cube(3)
-our_cube.scramble(6)
+our_cube.scramble(4)
 scrambled = our_cube.currentState()
 our_cube.prettyPrint(scrambled)
 soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
 start = time.time()
 bfs = breadthFirstSearch(deepcopy(our_cube))
+#astar = aStarSearch(deepcopy(our_cube), manhattanHeuristic)
+#idastar = idaStarSearch(deepcopy(our_cube))
 end = time.time()
 print "reverse steps:       ", soln
 print "breadth-first search:", bfs
-print "{} seconds to run breadth-first search".format(end - start)
+#print "A* search:           ", astar
+#print "IDA* search:", idastar
+print "{} seconds to run search".format(end - start)
+#print "{} seconds to run search".format(end2 - start2)
 
 """
 # test each possible rotation
