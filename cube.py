@@ -1,11 +1,10 @@
-from copy import deepcopy
-import timeit
+from copy import deepcopy, copy
 import sys, os
 import random 
-import argparse
 import heapq
 from collections import defaultdict
 import time
+import numpy as np
 
 ultimate_list = []
 
@@ -16,7 +15,7 @@ def transpose(matrix):
     return trmatrix
 
 def genFace(label, n):
-    return [[label for i in range(n)] for i in range(n)] 
+    return np.array([[label for i in range(n)] for i in range(n)])
 
 def listToTuple(matrix):
     return tuple([tuple([tuple(i) for i in x]) for x in matrix])
@@ -90,10 +89,12 @@ def breadthFirstSearch(problem):
             p_ = p + [neighbor[1]]
             if problem.isGoal(s_):
                 return p_
-            tuples_ = listToTuple(s_)
-            if tuples_ not in explored:
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if hashs_ not in explored:
                 frontier.push((s_, p_))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
@@ -113,24 +114,28 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     while not(frontier.isEmpty()):
         s, p = frontier.pop()
+        s = np.array(s)
+        s.flags.writeable = False
         problem.update(s)
-        explored.add(listToTuple(s))
+        explored.add(hash(s.data))
         for neighbor in problem.getSuccessors(s):
             s_ = neighbor[0]
             p_ = p + [neighbor[1]]
             if problem.isGoal(s_):
                 return p_
-            tuples_ = listToTuple(s_)
-            if (tuples_ not in explored):
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if (hashs_ not in explored):
                 frontier.push((s_, p_), len(p) + heuristic(s_, problem))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
 def bfsCorners(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = Queue()
-    frontier.push((problem.currentState(), []))
+    frontier.push((problem.currentState(), 0))
     explored = set()
     while not(frontier.isEmpty()):
         s, p = frontier.pop()
@@ -140,20 +145,22 @@ def bfsCorners(problem):
 #        explored.add(s)
         for neighbor in problem.getSuccessors(s):
             s_ = neighbor[0]
-            p_ = p + [neighbor[1]]
+            p_ = p + 1
             if problem.cornersSolved(s_):
                 return p_
-            tuples_ = listToTuple(s_)
-            if tuples_ not in explored:
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if hashs_ not in explored:
                 frontier.push((s_, p_))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
 def bfsEdges1(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = Queue()
-    frontier.push((problem.currentState(), []))
+    frontier.push((problem.currentState(), 0))
     explored = set()
     while not(frontier.isEmpty()):
         s, p = frontier.pop()
@@ -163,20 +170,22 @@ def bfsEdges1(problem):
 #        explored.add(s)
         for neighbor in problem.getSuccessors(s):
             s_ = neighbor[0]
-            p_ = p + [neighbor[1]]
+            p_ = p + 1
             if problem.edges1Solved(s_):
                 return p_
-            tuples_ = listToTuple(s_)
-            if tuples_ not in explored:
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if hashs_ not in explored:
                 frontier.push((s_, p_))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
 def bfsEdges2(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = Queue()
-    frontier.push((problem.currentState(), []))
+    frontier.push((problem.currentState(), 0))
     explored = set()
     while not(frontier.isEmpty()):
         s, p = frontier.pop()
@@ -186,20 +195,22 @@ def bfsEdges2(problem):
 #        explored.add(s)
         for neighbor in problem.getSuccessors(s):
             s_ = neighbor[0]
-            p_ = p + [neighbor[1]]
+            p_ = p + 1
             if problem.edges2Solved(s_):
                 return p_
-            tuples_ = listToTuple(s_)
-            if tuples_ not in explored:
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if hashs_ not in explored:
                 frontier.push((s_, p_))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
 def bfsHeuristic(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = Queue()
-    frontier.push((problem.currentState(), []))
+    frontier.push((problem.currentState(), 0))
     explored = set()
     corners = False
     edges1 = False
@@ -216,16 +227,18 @@ def bfsHeuristic(problem):
 #        explored.add(s)
         for neighbor in problem.getSuccessors(s):
             s_ = neighbor[0]
-            p_ = p + [neighbor[1]]
+            p_ = p + 1
             corners = corners or problem.cornersSolved(s_)
             edges1 = edges1 or problem.edges1Solved(s_)
             edges2 = edges2 or problem.edges2Solved(s_)
             if corners and edges1 and edges2:
                 return p_
-            tuples_ = listToTuple(s_)
-            if tuples_ not in explored:
+            s_ = np.array(s_)
+            s_.flags.writeable = False
+            hashs_ = hash(s_.data)
+            if hashs_ not in explored:
                 frontier.push((s_, p_))
-                explored.add(tuples_)
+                explored.add(hashs_)
 
     return []
 
@@ -234,12 +247,25 @@ def bfsHeuristic(problem):
 def manhattanHeuristic(position, problem):
     """The Manhattan distance heuristic for a Rubik's cube."""
     # sounds annoying
-    corners = len(bfsCorners(problem))
+    cstart = time.time()
+    corners = bfsCorners(problem)
+    cend = time.time()
     problem.update(position)
-    edges1 = len(bfsEdges1(problem))
+
+    e1start = time.time()
+    edges1 = bfsEdges1(problem)
+    e1end = time.time()
     problem.update(position)
-    edges2 = len(bfsEdges2(problem))
+
+    e2start = time.time()
+    edges2 = bfsEdges2(problem)
+    e2end = time.time()
     problem.update(position)
+
+    print "heuristic times:"
+    print "corners:", cend - cstart
+    print "edges1:", e1end - e1start
+    print "edges2:", e2end - e2start
     return max(corners, edges1, edges2)
 
     #return len(bfsHeuristic(deepcopy(problem)))
@@ -293,7 +319,7 @@ class Cube:
             self.fBack[0] = self.fLeft[0]
             self.fLeft[0] = temp
             """
-            temp = front[0]
+            temp = copy(front[0])
             front[0] = right[0]
             right[0] = back[0]
             back[0] = left[0]
@@ -308,7 +334,7 @@ class Cube:
             self.fBack[2] = self.fRight[2]
             self.fRight[2] = temp
             """
-            temp = front[-1]
+            temp = copy(front[-1])
             front[-1] = left[-1]
             left[-1] = back[-1]
             back[-1] = right[-1]
@@ -342,17 +368,17 @@ class Cube:
             relevant_matrices = [front, down, back, up]
             for i in range(len(relevant_matrices)):
                 matr = relevant_matrices[i]
-                relevant_matrices[i] = transpose(matr)
+                relevant_matrices[i] = np.transpose(matr)
             front, down, back, up = relevant_matrices
 
-            temp = front[0]
+            temp = copy(front[0])
             front[0] = up[0]
             up[0] = back[0]
             back[0] = down[0]
             down[0] = temp
 
             for ind, i in enumerate(relevant_matrices):
-                i = transpose(i)
+                i = np.transpose(i)
 
                 if ind == 0:
                     front = i
@@ -391,16 +417,16 @@ class Cube:
             relevant_matrices = [front, down, back, up]
             for i in range(len(relevant_matrices)):
                 matr = relevant_matrices[i]
-                relevant_matrices[i] = transpose(matr)
+                relevant_matrices[i] = np.transpose(matr)
             front, down, back, up = relevant_matrices
-            temp = front[-1]
+            temp = copy(front[-1])
             front[-1] = down[-1]
             down[-1] = back[-1]
             back[-1] = up[-1]
             up[-1] = temp
 
             for ind, i in enumerate(relevant_matrices):
-                i = transpose(i)
+                i = np.transpose(i)
 
                 if ind == 0:
                     front = i
@@ -445,16 +471,16 @@ class Cube:
             relevant_matrices = [left, down, right, up]
             for i in range(len(relevant_matrices)):
                 matr = relevant_matrices[i]
-                relevant_matrices[i] = transpose(matr)
+                relevant_matrices[i] = np.transpose(matr)
             left, down, right, up = relevant_matrices
-            temp = left[-1]
+            temp = copy(left[-1])
             left[-1] = down[-1]
             down[-1] = right[-1]
             right[-1] = up[-1]
             up[-1] = temp
 
             for ind, i in enumerate(relevant_matrices):
-                i = transpose(i)
+                i = np.transpose(i)
 
                 if ind == 0:
                     left = i
@@ -492,16 +518,16 @@ class Cube:
             relevant_matrices = [left, down, right, up]
             for i in range(len(relevant_matrices)):
                 matr = relevant_matrices[i]
-                relevant_matrices[i] = transpose(matr)
+                relevant_matrices[i] = np.transpose(matr)
             left, down, right, up = relevant_matrices
-            temp = left[0]
+            temp = copy(left[0])
             left[0] = up[0]
             up[0] = right[0]
             right[0] = down[0]
             down[0] = temp
 
             for ind, i in enumerate(relevant_matrices):
-                i = transpose(i)
+                i = np.transpose(i)
 
                 if ind == 0:
                     left = i
@@ -512,7 +538,7 @@ class Cube:
                 if ind == 3:
                     up = i
 
-        newState = [up, down, left, right, front, back]
+        newState = np.array([up, down, left, right, front, back])
         return newState
 
 
@@ -722,14 +748,16 @@ our_cube.scramble(4)
 scrambled = our_cube.currentState()
 our_cube.prettyPrint(scrambled)
 soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
+
+
 start = time.time()
-bfs = breadthFirstSearch(deepcopy(our_cube))
-#astar = aStarSearch(deepcopy(our_cube), manhattanHeuristic)
+#bfs = breadthFirstSearch(deepcopy(our_cube))
+astar = aStarSearch(deepcopy(our_cube), manhattanHeuristic)
 #idastar = idaStarSearch(deepcopy(our_cube))
 end = time.time()
 print "reverse steps:       ", soln
-print "breadth-first search:", bfs
-#print "A* search:           ", astar
+#print "breadth-first search:", bfs
+print "A* search:           ", astar
 #print "IDA* search:", idastar
 print "{} seconds to run search".format(end - start)
 #print "{} seconds to run search".format(end2 - start2)
