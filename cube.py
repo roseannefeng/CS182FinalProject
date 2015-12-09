@@ -774,7 +774,7 @@ def computeDistances(depth):
 
     while not(frontier.isEmpty()):
         s, d = frontier.pop()
-        if d == depth:
+        if d == depth + 1:
             return
         cube.update(s)
         for neighbor, _ in cube.getSuccessors(s):
