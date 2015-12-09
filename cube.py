@@ -272,6 +272,11 @@ def manhattanHeuristic(position, problem):
     pos = np.array(position)
     pos.flags.writeable = False
     hpos = hash(pos.data)
+
+    # because of the way we've set this up, 
+    # all states needed for finding optimum are in the dist dicts
+    if hpos not in distToCorners or hpos not in distToEdges1 or hpos not in distToEdges2:
+        return float('inf')
     corners = distToCorners[hpos]
     edges1 = distToEdges1[hpos]
     edges2 = distToEdges2[hpos]
@@ -279,6 +284,37 @@ def manhattanHeuristic(position, problem):
     return max(corners, edges1, edges2)
 
     #return len(bfsHeuristic(deepcopy(problem)))
+
+
+def idaStarSearch(problem, heuristic=nullHeuristic):
+    state = np.array(problem.currentState())
+    bound = heuristic(state, problem)
+    while True:
+        t, p = search(state, [], bound, problem, manhattanHeuristic)
+        if t is True:
+            return p
+        if t == float('inf'):
+            return []
+        bound = t
+    return []
+
+def search(node, path, bound, problem, heuristic):
+    f = len(path) + heuristic(node, problem)
+    if f > bound:
+        return f, path
+    if problem.isGoal(node):
+        return True, path
+    m = float('inf')
+    for neighbor, action in problem.getSuccessors(node):
+        path_ = path + [action]
+        problem.update(neighbor)
+        t, p = search(neighbor, path_, bound, problem, heuristic)
+        if t is True:
+            return True, p
+        if t < m:
+            m = t
+    return m, path
+
 
 
 class Cube:
@@ -803,52 +839,63 @@ def computeDistances(depth):
     print "states explored:", len(explored)
     return
 
-def main():
-    depth = 4
-    cube = Cube(3)
-    cube.scramble(depth)
-    scrambled = cube.currentState()
-    cube.prettyPrint(scrambled)
-    soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
+
+depth = 5
+cube = Cube(3)
+cube.scramble(depth)
+scrambled = cube.currentState()
+cube.prettyPrint(scrambled)
+soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
 
 
-    start = time.time()
-    computeDistances(depth)
-    end = time.time()
-    print "preprocessing:", end - start
+start = time.time()
+computeDistances(depth)
+end = time.time()
+print "preprocessing:", end - start
 
-    start = time.time()
-    #bfs = breadthFirstSearch(deepcopy(cube))
-    astar = aStarSearch(deepcopy(cube), manhattanHeuristic)
-    #idastar = idaStarSearch(deepcopy(cube))
-    end = time.time()
-    print "reverse steps:       ", soln
-    #print "breadth-first search:", bfs
-    print "A* search:           ", astar
-    #print "IDA* search:", idastar
-    print "{} seconds to run search".format(end - start)
-    #print "{} seconds to run search".format(end2 - start2)
+start = time.time()
+bfs = breadthFirstSearch(deepcopy(cube))
+end = time.time()
+print "{} seconds to run BFS".format(end - start)
 
-    """
-    # test each possible rotation
-    init = cube.currentState()
-    for f in range(0,6):
-        for d in range(1,5):
-            print "face:", f, "degree:", 90*d
-            cube.prettyPrint(cube.rotate(init, f, d))
-    """
+start = time.time()
+astar = aStarSearch(deepcopy(cube), manhattanHeuristic)
+end = time.time()
 
-    """
-    # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
-    # THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
-    # WILL BE USEFUL FOR CHECKING OUR SOLUTION
-    print ultimate_list
-    """
+print "{} seconds to run A*".format(end - start)
 
-    """
-    # uses ultimate_list to reverse the scramble
-    state = cube.currentState()
-    for f, d in ultimate_list[::-1]:
-        print "undoing rotation face {} by {} degrees".format(f, d*90)
-        state = ube.rotate(cube.currentState(), f, 4-d)
-    """
+start = time.time()
+idastar = idaStarSearch(deepcopy(cube), manhattanHeuristic)
+end = time.time()
+print "{} seconds to run IDA*".format(end - start)
+
+
+print "reverse steps:       ", soln
+print "breadth-first search:", bfs
+print "A* search:           ", astar
+print "IDA* search:         ", idastar
+
+
+"""
+# test each possible rotation
+init = cube.currentState()
+for f in range(0,6):
+    for d in range(1,5):
+        print "face:", f, "degree:", 90*d
+        cube.prettyPrint(cube.rotate(init, f, d))
+"""
+
+"""
+# THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
+# THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
+# WILL BE USEFUL FOR CHECKING OUR SOLUTION
+print ultimate_list
+"""
+
+"""
+# uses ultimate_list to reverse the scramble
+state = cube.currentState()
+for f, d in ultimate_list[::-1]:
+    print "undoing rotation face {} by {} degrees".format(f, d*90)
+    state = ube.rotate(cube.currentState(), f, 4-d)
+"""
