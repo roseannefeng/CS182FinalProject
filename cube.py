@@ -247,6 +247,7 @@ def bfsHeuristic(problem):
 def manhattanHeuristic(position, problem):
     """The Manhattan distance heuristic for a Rubik's cube."""
     # sounds annoying
+    """
     cstart = time.time()
     corners = bfsCorners(problem)
     cend = time.time()
@@ -266,6 +267,15 @@ def manhattanHeuristic(position, problem):
     print "corners:", cend - cstart
     print "edges1:", e1end - e1start
     print "edges2:", e2end - e2start
+    """
+
+    pos = np.array(position)
+    pos.flags.writeable = False
+    hpos = hash(pos.data)
+    corners = distToCorners[hpos]
+    edges1 = distToEdges1[hpos]
+    edges2 = distToEdges2[hpos]
+
     return max(corners, edges1, edges2)
 
     #return len(bfsHeuristic(deepcopy(problem)))
@@ -742,46 +752,103 @@ class Cube:
         print labelstr
         print 'goal state:', self.isGoal(state)
 
+distToCorners = {}
+distToEdges1 = {}
+distToEdges2 = {}
 
-our_cube = Cube(3)
-our_cube.scramble(4)
-scrambled = our_cube.currentState()
-our_cube.prettyPrint(scrambled)
-soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
+def computeDistances(depth):
+    distfromgoal = 0
+    cube = Cube(3)
+    init = cube.currentState()
+    init = np.array(init)
+    init.flags.writeable = False
+    hashinit = hash(init.data)
+    distToCorners[hashinit] = distfromgoal
+    distToEdges1[hashinit] = distfromgoal
+    distToEdges2[hashinit] = distfromgoal
+
+    frontier = Queue()
+    frontier.push((init, distfromgoal))
+    explored = set()
+    explored.add(hashinit)
+
+    while not(frontier.isEmpty()):
+        s, d = frontier.pop()
+        if d == depth:
+            return
+        cube.update(s)
+        for neighbor, _ in cube.getSuccessors(s):
+            state = np.array(neighbor)
+            state.flags.writeable = False
+            hashstate = hash(state.data)
+            if hashstate not in distToCorners:
+                if cube.cornersSolved(state):
+                    distToCorners[hashstate] = 0
+                else:
+                    distToCorners[hashstate] = d+1
+            if hashstate not in distToEdges1:
+                if cube.edges1Solved(state):
+                    distToEdges1[hashstate] = 0
+                else:
+                    distToEdges1[hashstate] = d+1
+            if hashstate not in distToEdges2:
+                if cube.edges2Solved(state):
+                    distToEdges2[hashstate] = 0
+                else:
+                    distToEdges2[hashstate] = d+1
+            if hashstate not in explored:
+                frontier.push((state, d+1))
+            explored.add(hashstate)
+
+    print "states explored:", len(explored)
+    return
+
+def main():
+    depth = 4
+    cube = Cube(3)
+    cube.scramble(depth)
+    scrambled = cube.currentState()
+    cube.prettyPrint(scrambled)
+    soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
 
 
-start = time.time()
-#bfs = breadthFirstSearch(deepcopy(our_cube))
-astar = aStarSearch(deepcopy(our_cube), manhattanHeuristic)
-#idastar = idaStarSearch(deepcopy(our_cube))
-end = time.time()
-print "reverse steps:       ", soln
-#print "breadth-first search:", bfs
-print "A* search:           ", astar
-#print "IDA* search:", idastar
-print "{} seconds to run search".format(end - start)
-#print "{} seconds to run search".format(end2 - start2)
+    start = time.time()
+    computeDistances(depth)
+    end = time.time()
+    print "preprocessing:", end - start
 
-"""
-# test each possible rotation
-init = our_cube.currentState()
-for f in range(0,6):
-    for d in range(1,5):
-        print "face:", f, "degree:", 90*d
-        our_cube.prettyPrint(our_cube.rotate(init, f, d))
-"""
+    start = time.time()
+    #bfs = breadthFirstSearch(deepcopy(cube))
+    astar = aStarSearch(deepcopy(cube), manhattanHeuristic)
+    #idastar = idaStarSearch(deepcopy(cube))
+    end = time.time()
+    print "reverse steps:       ", soln
+    #print "breadth-first search:", bfs
+    print "A* search:           ", astar
+    #print "IDA* search:", idastar
+    print "{} seconds to run search".format(end - start)
+    #print "{} seconds to run search".format(end2 - start2)
 
-"""
-# THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
-# THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
-# WILL BE USEFUL FOR CHECKING OUR SOLUTION
-print ultimate_list
-"""
+    """
+    # test each possible rotation
+    init = cube.currentState()
+    for f in range(0,6):
+        for d in range(1,5):
+            print "face:", f, "degree:", 90*d
+            cube.prettyPrint(cube.rotate(init, f, d))
+    """
 
-"""
-# uses ultimate_list to reverse the scramble
-state = our_cube.currentState()
-for f, d in ultimate_list[::-1]:
-    print "undoing rotation face {} by {} degrees".format(f, d*90)
-    state = our_cube.rotate(our_cube.currentState(), f, 4-d)
-"""
+    """
+    # THIS JUST PRINTS THE ORDER IN WHICH FACES WERE ROTATED
+    # THE REVERSE ORDER IS THE SOLUTION TO THE PROBLEM WHICH 
+    # WILL BE USEFUL FOR CHECKING OUR SOLUTION
+    print ultimate_list
+    """
+
+    """
+    # uses ultimate_list to reverse the scramble
+    state = cube.currentState()
+    for f, d in ultimate_list[::-1]:
+        print "undoing rotation face {} by {} degrees".format(f, d*90)
+        state = ube.rotate(cube.currentState(), f, 4-d)
+    """
