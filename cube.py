@@ -564,34 +564,41 @@ def computeDistances(depth):
 
 
 depth = 5
-cube = Cube(3)
-cube.scramble(depth)
-scrambled = cube.currentState()
-cube.prettyPrint(scrambled)
-soln = [(f, 4-d) for f,d in ultimate_list[::-1]]
-
-
+dim = 3
+cube = Cube(dim)
+print "running code for a {}-dimensional cube up to depth {}".format(depth, dim)
+init = cube.currentState()
 start = time.time()
 e = computeDistances(depth)
 end = time.time()
 print "preprocessing: {} seconds".format(end - start)
 print "states explored:", len(e)
 
-start = time.time()
-bfs = breadthFirstSearch(deepcopy(cube))
-end = time.time()
-print "{} seconds to run BFS".format(end - start)
+for d in range(1,depth+1):
+    print "cube scrambled to depth", d
+    cube.scramble(d)
+    scrambled = cube.currentState()
+    cube.prettyPrint(scrambled)
+    soln = [(f, 4-de) for f,de in ultimate_list[::-1]]
 
-start = time.time()
-astar = aStarSearch(deepcopy(cube), manhattanHeuristic)
-end = time.time()
+    start = time.time()
+    bfs = breadthFirstSearch(deepcopy(cube))
+    end = time.time()
+    print "{} seconds to run BFS".format(end - start)
 
-print "{} seconds to run A*".format(end - start)
+    start = time.time()
+    astar = aStarSearch(deepcopy(cube), manhattanHeuristic)
+    end = time.time()
+    print "{} seconds to run A*".format(end - start)
 
-start = time.time()
-idastar = idaStarSearch(deepcopy(cube), manhattanHeuristic)
-end = time.time()
-print "{} seconds to run IDA*".format(end - start)
+    start = time.time()
+    idastar = idaStarSearch(deepcopy(cube), manhattanHeuristic)
+    end = time.time()
+    print "{} seconds to run IDA*".format(end - start)
+
+    cube.update(init)
+    ultimate_list = []
+    print ""
 
 
 print "reverse steps:       ", soln
