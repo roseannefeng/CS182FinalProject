@@ -563,7 +563,7 @@ def computeDistances(depth):
     return
 
 
-depth = 5
+depth = 3
 dim = 3
 cube = Cube(dim)
 print "running code for a {}-dimensional cube up to depth {}".format(depth, dim)
@@ -596,15 +596,16 @@ for d in range(1,depth+1):
     end = time.time()
     print "{} seconds to run IDA*".format(end - start)
 
+    print "reverse steps:       ", soln
+    print "breadth-first search:", bfs
+    print "A* search:           ", astar
+    print "IDA* search:         ", idastar
+
     cube.update(init)
     ultimate_list = []
     print ""
 
 
-print "reverse steps:       ", soln
-print "breadth-first search:", bfs
-print "A* search:           ", astar
-print "IDA* search:         ", idastar
 
 
 """
