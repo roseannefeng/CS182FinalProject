@@ -563,7 +563,7 @@ def computeDistances(depth):
     return
 
 
-depth = 3
+depth = 5
 dim = 3
 cube = Cube(dim)
 print "running code for a {}-dimensional cube up to depth {}".format(depth, dim)
