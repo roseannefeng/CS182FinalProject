@@ -1,5 +1,5 @@
 # CS182 Final Project
-Final project for CS182: Artificial Intelligence, Rubik's Cube Solver as CSP.
+Final project for CS182: Artificial Intelligence, Rubik's Cube Solver as search.
 Roseanne Feng, Nelson Yanes-Nunez, and Zahra Mahmood
 
 # Instructions
